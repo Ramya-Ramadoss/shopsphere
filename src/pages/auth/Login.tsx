@@ -67,7 +67,9 @@ export const Login: React.FC = () => {
       if (userData.role === 'ADMIN') {
         navigate('/admin/dashboard', { replace: true });
       } else {
-        navigate(from, { replace: true });
+        // Prevent redirecting customer users to admin routes
+        const safeDestination = from.startsWith('/admin') ? '/' : from;
+        navigate(safeDestination, { replace: true });
       }
     } catch (error: any) {
       console.error('Login error', error);

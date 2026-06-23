@@ -18,6 +18,7 @@ const productFormSchema = z.object({
   sku: z.string().min(1, 'SKU is required'),
   categoryId: z.coerce.number().min(1, 'Please select a category'),
   quantity: z.coerce.number().min(0, 'Initial stock must be 0 or greater'),
+  imageUrl: z.string().optional(),
 });
 
 type ProductFormValues = z.infer<typeof productFormSchema>;
@@ -114,6 +115,7 @@ export const AdminProducts: React.FC = () => {
       sku: '',
       categoryId: 0,
       quantity: 0,
+      imageUrl: '',
     });
     setIsModalOpen(true);
   };
@@ -128,6 +130,7 @@ export const AdminProducts: React.FC = () => {
       sku: p.brand.toLowerCase() + '-' + p.id, // Fallback mock SKU if undefined
       categoryId: p.category?.id || 0,
       quantity: p.inventory?.quantity || 0,
+      imageUrl: p.images && p.images.length > 0 ? p.images[0].imageUrl : '',
     });
     setIsModalOpen(true);
   };
@@ -391,6 +394,20 @@ export const AdminProducts: React.FC = () => {
                     {...register('quantity')}
                   />
                   {errors.quantity && <span className="text-xs text-rose-500 font-semibold">{errors.quantity.message}</span>}
+                </div>
+
+                {/* Product Image URL */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Product Image URL</label>
+                  <input
+                    type="text"
+                    placeholder="https://example.com/image.jpg"
+                    className={`bg-slate-50 border text-slate-850 px-3.5 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:bg-white transition-all ${
+                      errors.imageUrl ? 'border-rose-400' : 'border-slate-200'
+                    }`}
+                    {...register('imageUrl')}
+                  />
+                  {errors.imageUrl && <span className="text-xs text-rose-500 font-semibold">{errors.imageUrl.message}</span>}
                 </div>
 
                 {/* Description */}

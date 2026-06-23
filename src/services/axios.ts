@@ -4,6 +4,58 @@ import toast from 'react-hot-toast';
 
 const API_BASE_URL = '/api';
 
+// Helper function to recursively map backend ProductResponse objects to frontend Product shape
+function mapBackendResponse(data: any): any {
+  if (data === null || data === undefined || typeof data !== 'object') {
+    return data;
+  }
+
+  if (Array.isArray(data)) {
+    return data.map(item => mapBackendResponse(item));
+  }
+
+  // Check if this object represents a backend ProductResponse
+  if (Object.prototype.hasOwnProperty.call(data, 'productName')) {
+    const mappedProduct = {
+      ...data,
+      name: data.productName,
+      category: {
+        id: data.categoryId || 0,
+        name: data.categoryName || 'Unassigned',
+      },
+      inventory: {
+        id: data.id,
+        quantity: data.quantity !== undefined ? data.quantity : 0,
+        inStock: data.inStock !== undefined ? data.inStock : false,
+        reservedQuantity: 0,
+      },
+      available: data.active !== undefined ? data.active : true,
+    };
+
+    // Recursively map all fields of mappedProduct (in case there are other nested objects/arrays)
+    for (const key of Object.keys(mappedProduct)) {
+      mappedProduct[key] = mapBackendResponse(mappedProduct[key]);
+    }
+    return mappedProduct;
+  }
+
+  // Check if this object is a product image response (has primaryImage)
+  if (Object.prototype.hasOwnProperty.call(data, 'primaryImage')) {
+    const mappedImage = {
+      ...data,
+      isPrimary: data.primaryImage,
+    };
+    return mappedImage;
+  }
+
+  // Generic object recursion
+  const mappedObj: any = {};
+  for (const key of Object.keys(data)) {
+    mappedObj[key] = mapBackendResponse(data[key]);
+  }
+  return mappedObj;
+}
+
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -34,7 +86,10 @@ export const setUnauthorizedCallback = (callback: () => void) => {
 
 // Response Interceptor for global error handling
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    response.data = mapBackendResponse(response.data);
+    return response;
+  },
   (error: AxiosError<any>) => {
     const { response, message: networkMessage } = error;
 
