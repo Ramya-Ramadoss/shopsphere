@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: shopsphere-db
+    environment:
+      POSTGRES_DB: shopsphere_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: student123
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  app:
+    build: .
+    container_name: shopsphere-app
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/shopsphere_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: student123
+      JWT_SECRET: 9a67471ec6391621d4be883f0d03d3c87e8b3e8c56fa91176b6d5b0a3c20df89
+      JWT_EXPIRATION: 86400000
+
+volumes:
+  pgdata:
