@@ -377,7 +377,8 @@ export const Profile: React.FC = () => {
                 <span className="font-bold text-slate-700 text-xs line-clamp-1 group-hover:text-blue-600 transition-colors w-full">
                   {item.productName}
                 </span>
-                <span className="text-[10px] text-slate-450 font-extrabold">Rs. {item.price.toLocaleString('en-IN')}</span>
+                <span className="text-[10px] text-slate-450 font-extrabold">Rs. {(item.price || 0).toLocaleString('en-IN')}</span>
+
               </Link>
             ))}
           </div>

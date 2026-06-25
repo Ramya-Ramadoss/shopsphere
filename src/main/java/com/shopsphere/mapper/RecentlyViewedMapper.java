@@ -14,6 +14,13 @@ public class RecentlyViewedMapper {
                 .productId(viewed.getProduct().getId())
                 .productName(viewed.getProduct().getProductName())
                 .viewedAt(viewed.getViewedAt())
+                .productImage(
+                        viewed.getProduct().getImages().isEmpty()
+                                ? null
+                                : viewed.getProduct().getImages().get(0).getImageUrl()
+                )
+                .price(viewed.getProduct().getPrice())
                 .build();
+
     }
 }

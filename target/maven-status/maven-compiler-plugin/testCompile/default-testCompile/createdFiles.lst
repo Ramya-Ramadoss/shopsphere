@@ -1,0 +1,4 @@
+com\shopsphere\service\OrderServiceTest.class
+com\shopsphere\security\JwtTokenProviderTest.class
+com\shopsphere\service\PaymentServiceTest.class
+com\shopsphere\ShopsphereApplicationTests.class

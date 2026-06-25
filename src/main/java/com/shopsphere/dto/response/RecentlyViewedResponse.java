@@ -18,4 +18,8 @@ public class RecentlyViewedResponse {
     private String productName;
 
     private LocalDateTime viewedAt;
-}
+
+    private String productImage;
+
+    private java.math.BigDecimal price;
+}

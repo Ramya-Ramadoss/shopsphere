@@ -84,8 +84,9 @@ export const Wishlist: React.FC = () => {
                       </h3>
                     </Link>
                     <span className="font-extrabold text-slate-800 text-sm sm:text-base block">
-                      Rs. {item.price.toLocaleString('en-IN')}
+                      Rs. {(item.price || 0).toLocaleString('en-IN')}
                     </span>
+
                   </div>
 
                   <div className="flex gap-2 pt-3 border-t border-slate-50">

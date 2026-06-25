@@ -6,6 +6,8 @@ import { useWishlist } from '../../context/WishlistContext';
 import api from '../../services/axios';
 import type { Notification, ApiResponse } from '../../types';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
+
 import {
   ShoppingBag,
   Heart,
@@ -28,6 +30,24 @@ export const CustomerLayout: React.FC = () => {
   const { wishlist } = useWishlist();
   const navigate = useNavigate();
   const location = useLocation();
+
+  const [footerEmail, setFooterEmail] = useState('');
+
+  const handleFooterSubscribe = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!footerEmail) {
+      toast.error('Please enter a valid email address.');
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(footerEmail)) {
+      toast.error('Please enter a valid email address.');
+      return;
+    }
+    toast.success(`Thank you for subscribing to our newsletter!`);
+    setFooterEmail('');
+  };
+
   const queryClient = useQueryClient();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -461,10 +481,12 @@ export const CustomerLayout: React.FC = () => {
             <p className="text-slate-400 text-sm leading-relaxed">
               Subscribe to get notified about our premium offers, discount cycles, and new catalog additions.
             </p>
-            <form onSubmit={(e) => e.preventDefault()} className="flex gap-2">
+            <form onSubmit={handleFooterSubscribe} className="flex gap-2">
               <input
                 type="email"
                 placeholder="Enter email..."
+                value={footerEmail}
+                onChange={(e) => setFooterEmail(e.target.value)}
                 className="bg-slate-800 text-white text-sm px-3.5 py-2 rounded-xl focus:outline-none focus:ring-1 focus:ring-teal-400 flex-1 border border-slate-700"
               />
               <button
@@ -474,6 +496,7 @@ export const CustomerLayout: React.FC = () => {
                 Join
               </button>
             </form>
+
           </div>
         </div>
 

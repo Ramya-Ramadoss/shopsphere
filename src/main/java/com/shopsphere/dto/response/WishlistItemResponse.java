@@ -18,4 +18,6 @@ public class WishlistItemResponse {
     private String productImage;
 
     private Boolean available;
-}
+
+    private java.math.BigDecimal price;
+}

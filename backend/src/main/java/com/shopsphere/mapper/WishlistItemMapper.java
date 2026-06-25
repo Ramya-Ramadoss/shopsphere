@@ -19,6 +19,8 @@ public class WishlistItemMapper {
                                 : item.getProduct().getImages().get(0).getImageUrl()
                 )
                 .available(item.getAvailable())
+                .price(item.getProduct().getPrice())
                 .build();
+
     }
 }

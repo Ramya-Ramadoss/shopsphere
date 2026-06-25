@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import api from '../../services/axios';
 import type { Product, Category, ApiResponse, PageResponse } from '../../types';
+import toast from 'react-hot-toast';
 import { ProductCard } from '../../components/cards/ProductCard';
+
 import {
   ShieldCheck,
   Truck,
@@ -16,8 +18,25 @@ import {
 import { motion } from 'framer-motion';
 
 export const Home: React.FC = () => {
+  const [newsletterEmail, setNewsletterEmail] = useState('');
+
+  const handleSubscribe = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newsletterEmail) {
+      toast.error('Please enter a valid email address.');
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(newsletterEmail)) {
+      toast.error('Please enter a valid email address.');
+      return;
+    }
+    toast.success(`Thank you for subscribing to our newsletter!`);
+    setNewsletterEmail('');
+  };
 
   // Fetch Categories
+
   const { data: categoriesResponse, isLoading: isCategoriesLoading } = useQuery<ApiResponse<Category[]>>({
     queryKey: ['categories'],
     queryFn: async () => {
@@ -276,16 +295,19 @@ export const Home: React.FC = () => {
             Join the newsletter list and receive information regarding new seasonal inventory batches directly in your mailbox.
           </p>
         </div>
-        <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto md:min-w-[400px]">
+        <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row gap-3 w-full md:w-auto md:min-w-[400px]">
           <input
             type="email"
             placeholder="example@shopsphere.com"
+            value={newsletterEmail}
+            onChange={(e) => setNewsletterEmail(e.target.value)}
             className="bg-slate-800 text-white border border-slate-700 px-5 py-3 rounded-2xl text-sm focus:outline-none focus:ring-1 focus:ring-teal-400 flex-1"
           />
-          <button className="bg-teal-500 hover:bg-teal-400 text-slate-900 font-bold px-6 py-3 rounded-2xl text-sm transition-colors cursor-pointer">
+          <button type="submit" className="bg-teal-500 hover:bg-teal-400 text-slate-900 font-bold px-6 py-3 rounded-2xl text-sm transition-colors cursor-pointer">
             Subscribe
           </button>
-        </div>
+        </form>
+
       </section>
     </div>
   );

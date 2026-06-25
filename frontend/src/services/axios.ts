@@ -108,19 +108,25 @@ api.interceptors.response.use(
 
       switch (status) {
         case 401:
-          // Unauthorized: Expiry or invalid token
-          toast.error('Session expired. Please log in again.');
-          if (onUnauthorizedCallback) {
-            onUnauthorizedCallback();
+          // If the request was to login, it is a bad credential error, not an expired session
+          if (error.config?.url?.includes('/auth/login')) {
+            toast.error(errorMessage || 'Invalid email or password.');
           } else {
-            localStorage.removeItem('shopsphere_token');
-            localStorage.removeItem('shopsphere_user');
-            // Force reload to trigger auth state reset if context isn't bound yet
-            if (window.location.pathname !== '/login') {
-              window.location.href = '/login';
+            // Unauthorized: Expiry or invalid token
+            toast.error('Session expired. Please log in again.');
+            if (onUnauthorizedCallback) {
+              onUnauthorizedCallback();
+            } else {
+              localStorage.removeItem('shopsphere_token');
+              localStorage.removeItem('shopsphere_user');
+              // Force reload to trigger auth state reset if context isn't bound yet
+              if (window.location.pathname !== '/login') {
+                window.location.href = '/login';
+              }
             }
           }
           break;
+
         case 403:
           toast.error('Access Denied. You do not have permission.');
           break;
