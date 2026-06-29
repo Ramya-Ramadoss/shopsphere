@@ -99,8 +99,8 @@ export const AdminInventory: React.FC = () => {
 
   const filteredItems = inventoryItems.filter((item) => {
     const matchesSearch =
-      item.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.brand.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (item.productName && item.productName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (item.brand && item.brand.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (item.sku && item.sku.toLowerCase().includes(searchTerm.toLowerCase()));
 
     if (showLowStockOnly) {
