@@ -16,4 +16,7 @@ public class OrderRequest {
 
     @NotBlank(message = "Order status is required")
     private String orderStatus;
+    private String deliveryMethod;
+
+    private String shippingAddress;
 }
