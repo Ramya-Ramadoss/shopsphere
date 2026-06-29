@@ -11,7 +11,7 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
 
     List<OrderItem> findByOrderId(Long orderId);
 
-    @Query("SELECT oi.product, SUM(oi.quantity) as totalSold FROM OrderItem oi GROUP BY oi.product ORDER BY SUM(oi.quantity) DESC")
+    @Query("SELECT oi.product.id, SUM(oi.quantity) FROM OrderItem oi GROUP BY oi.product.id ORDER BY SUM(oi.quantity) DESC")
     List<Object[]> findTopSellingProducts(Pageable pageable);
 
     @Query("SELECT c.name, SUM(oi.quantity), SUM(oi.subtotal) FROM OrderItem oi JOIN oi.product p JOIN p.category c GROUP BY c.name")

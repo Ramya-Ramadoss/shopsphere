@@ -1,5 +1,6 @@
-package com.shopsphere.dto.response;
+package com.shopsphere.dto.request;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
 @Getter
@@ -7,10 +8,9 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ProductImageResponse {
+public class ProductImageRequest {
 
-    private Long id;
-
+    @NotBlank(message = "Image URL is required")
     private String imageUrl;
 
     private String altText;

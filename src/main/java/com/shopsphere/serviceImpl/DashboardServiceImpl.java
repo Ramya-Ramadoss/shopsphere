@@ -1,6 +1,9 @@
 package com.shopsphere.serviceImpl;
 
 import com.shopsphere.dto.response.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import com.shopsphere.entity.*;
 import com.shopsphere.enums.OrderStatus;
 import com.shopsphere.repository.*;
@@ -76,36 +79,174 @@ public class DashboardServiceImpl implements DashboardService {
 
     @Override
     public AdminDashboardResponse getAdminDashboard() {
-        // 1. Total Revenue (sum of non-cancelled order totals)
-        BigDecimal totalRevenue = orderRepository.calculateTotalRevenue();
+        // 1. Grid Statistics
+        BigDecimal totalRevenue = orderRepository.findAll().stream()
+                .filter(o -> o.getOrderStatus() != OrderStatus.CANCELLED)
+                .map(Order::getTotalAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        // 2. Total Orders
+        BigDecimal deliveryChargesCollected = orderRepository.findAll().stream()
+                .filter(o -> o.getOrderStatus() != OrderStatus.CANCELLED)
+                .map(o -> o.getDeliveryCharge() != null ? o.getDeliveryCharge() : BigDecimal.ZERO)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
         long totalOrders = orderRepository.count();
-
-        // 3. Total Customers
         long totalCustomers = customerRepository.count();
+        long totalProducts = productRepository.findByDeletedFalse().size();
+        long activeProducts = productRepository.findByDeletedFalse().stream().filter(p -> p.getActive() != null && p.getActive()).count();
+        long premiumProducts = productRepository.findByDeletedFalse().stream().filter(p -> p.getPremium() != null && p.getPremium()).count();
 
-        // 4. Total Products
-        long totalProducts = productRepository.count();
+        java.time.LocalDateTime startOfToday = java.time.LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0);
+        long ordersToday = orderRepository.findAll().stream()
+                .filter(o -> o.getOrderDate() != null && o.getOrderDate().isAfter(startOfToday))
+                .count();
 
-        // 5. Order Status Counts
         long pendingOrders = orderRepository.countByOrderStatus(OrderStatus.PENDING);
         long deliveredOrders = orderRepository.countByOrderStatus(OrderStatus.DELIVERED);
         long cancelledOrders = orderRepository.countByOrderStatus(OrderStatus.CANCELLED);
 
-        // 6. Low Stock Products (stock < 10)
-        long lowStockProducts = inventoryRepository.countByQuantityLessThan(10);
+        java.time.LocalDateTime startOfSevenDaysAgo = java.time.LocalDateTime.now().minusDays(7);
+        long newCustomers = customerRepository.findAll().stream()
+                .filter(c -> c.getCreatedAt() != null && c.getCreatedAt().isAfter(startOfSevenDaysAgo))
+                .count();
 
-        // 7. Top Selling Products (top 5 based on OrderItem sales)
+        long lowStockProducts = inventoryRepository.countByQuantityLessThan(10);
+        long outOfStockProducts = inventoryRepository.findAll().stream()
+                .filter(i -> i.getQuantity() <= 0 && i.getProduct() != null && !i.getProduct().getDeleted())
+                .count();
+
+        long pendingApprovalProducts = productRepository.findByDeletedFalse().stream()
+                .filter(p -> p.getApproved() != null && !p.getApproved())
+                .count();
+
+        long trashProductsCount = productRepository.findByDeletedTrue().size();
+        long lowReviewProductsCount = productRepository.findProductsAwaitingReviewVerification().size();
+
+        // Calculate Most/Least Ordered and Top Category
+        List<OrderItem> allOrderItems = orderItemRepository.findAll();
+        Map<Product, Integer> productQuantities = allOrderItems.stream()
+                .filter(oi -> oi.getProduct() != null && oi.getOrder() != null && oi.getOrder().getOrderStatus() != OrderStatus.CANCELLED)
+                .collect(Collectors.groupingBy(OrderItem::getProduct, Collectors.summingInt(OrderItem::getQuantity)));
+
+        String mostOrderedProduct = "None";
+        String leastOrderedProduct = "None";
+        if (!productQuantities.isEmpty()) {
+            mostOrderedProduct = productQuantities.entrySet().stream()
+                    .max(Map.Entry.comparingByValue())
+                    .map(e -> e.getKey().getProductName())
+                    .orElse("None");
+            leastOrderedProduct = productQuantities.entrySet().stream()
+                    .min(Map.Entry.comparingByValue())
+                    .map(e -> e.getKey().getProductName())
+                    .orElse("None");
+        }
+
+        Map<String, Integer> categoryQuantities = allOrderItems.stream()
+                .filter(oi -> oi.getProduct() != null && oi.getProduct().getCategory() != null && oi.getOrder() != null && oi.getOrder().getOrderStatus() != OrderStatus.CANCELLED)
+                .collect(Collectors.groupingBy(oi -> oi.getProduct().getCategory().getName(), Collectors.summingInt(OrderItem::getQuantity)));
+
+        String topCategory = "None";
+        if (!categoryQuantities.isEmpty()) {
+            topCategory = categoryQuantities.entrySet().stream()
+                    .max(Map.Entry.comparingByValue())
+                    .map(Map.Entry::getKey)
+                    .orElse("None");
+        }
+
+        // 2. Charts Data
+        List<Map<String, Object>> dailyOrdersChart = new ArrayList<>();
+        java.time.format.DateTimeFormatter dayFormatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        for (int i = 6; i >= 0; i--) {
+            java.time.LocalDateTime day = java.time.LocalDateTime.now().minusDays(i);
+            String dayStr = day.format(dayFormatter);
+            long count = orderRepository.findAll().stream()
+                    .filter(o -> o.getOrderDate() != null && o.getOrderDate().format(dayFormatter).equals(dayStr))
+                    .count();
+            Map<String, Object> point = new HashMap<>();
+            point.put("date", dayStr);
+            point.put("orders", count);
+            dailyOrdersChart.add(point);
+        }
+
+        List<Map<String, Object>> monthlyOrdersChart = new ArrayList<>();
+        java.time.format.DateTimeFormatter monthFormatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM");
+        for (int i = 5; i >= 0; i--) {
+            java.time.LocalDateTime month = java.time.LocalDateTime.now().minusMonths(i);
+            String monthStr = month.format(monthFormatter);
+            long count = orderRepository.findAll().stream()
+                    .filter(o -> o.getOrderDate() != null && o.getOrderDate().format(monthFormatter).equals(monthStr))
+                    .count();
+            Map<String, Object> point = new HashMap<>();
+            point.put("month", monthStr);
+            point.put("orders", count);
+            monthlyOrdersChart.add(point);
+        }
+
+        List<Map<String, Object>> categoryDistributionChart = new ArrayList<>();
+        Map<String, Long> categoryCount = productRepository.findByDeletedFalse().stream()
+                .filter(p -> p.getCategory() != null)
+                .collect(Collectors.groupingBy(p -> p.getCategory().getName(), Collectors.counting()));
+        categoryCount.forEach((name, count) -> {
+            Map<String, Object> point = new HashMap<>();
+            point.put("category", name);
+            point.put("value", count);
+            categoryDistributionChart.add(point);
+        });
+
+        List<Map<String, Object>> productSalesChart = new ArrayList<>();
+        productQuantities.entrySet().stream()
+                .sorted(Map.Entry.<Product, Integer>comparingByValue().reversed())
+                .limit(5)
+                .forEach(entry -> {
+                    Map<String, Object> point = new HashMap<>();
+                    point.put("name", entry.getKey().getProductName());
+                    point.put("sales", entry.getValue());
+                    productSalesChart.add(point);
+                });
+
+        List<Map<String, Object>> customerGrowthChart = new ArrayList<>();
+        long cumulative = customerRepository.findAll().stream()
+                .filter(c -> c.getCreatedAt() != null && c.getCreatedAt().isBefore(java.time.LocalDateTime.now().minusDays(6)))
+                .count();
+        for (int i = 6; i >= 0; i--) {
+            java.time.LocalDateTime day = java.time.LocalDateTime.now().minusDays(i);
+            String dayStr = day.format(dayFormatter);
+            long signups = customerRepository.findAll().stream()
+                    .filter(c -> c.getCreatedAt() != null && c.getCreatedAt().format(dayFormatter).equals(dayStr))
+                    .count();
+            cumulative += signups;
+            Map<String, Object> point = new HashMap<>();
+            point.put("date", dayStr);
+            point.put("customers", cumulative);
+            customerGrowthChart.add(point);
+        }
+
+        List<Map<String, Object>> revenueTrendChart = new ArrayList<>();
+        for (int i = 6; i >= 0; i--) {
+            java.time.LocalDateTime day = java.time.LocalDateTime.now().minusDays(i);
+            String dayStr = day.format(dayFormatter);
+            BigDecimal dailyRev = orderRepository.findAll().stream()
+                    .filter(o -> o.getOrderStatus() != OrderStatus.CANCELLED)
+                    .filter(o -> o.getOrderDate() != null && o.getOrderDate().format(dayFormatter).equals(dayStr))
+                    .map(Order::getTotalAmount)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            Map<String, Object> point = new HashMap<>();
+            point.put("date", dayStr);
+            point.put("revenue", dailyRev);
+            revenueTrendChart.add(point);
+        }
+
+        // 3. Lists (top selling products based on OrderItem sales)
         List<Object[]> topSellingData = orderItemRepository.findTopSellingProducts(PageRequest.of(0, 5));
         List<ProductResponse> topSellingProducts = topSellingData.stream()
                 .map(data -> {
-                    Product product = (Product) data[0];
-                    return productMapper.toResponse(product);
+                    Long productId = (Long) data[0];
+                    Product product = productRepository.findById(productId).orElse(null);
+                    return product != null ? productMapper.toResponse(product) : null;
                 })
+                .filter(java.util.Objects::nonNull)
                 .collect(Collectors.toList());
 
-        // 8. Recent Orders (top 10)
         List<OrderResponse> recentOrders = orderRepository.findTop10ByOrderByOrderDateDesc()
                 .stream()
                 .map(orderMapper::toResponse)
@@ -113,13 +254,31 @@ public class DashboardServiceImpl implements DashboardService {
 
         return AdminDashboardResponse.builder()
                 .totalRevenue(totalRevenue)
+                .deliveryChargesCollected(deliveryChargesCollected)
                 .totalOrders(totalOrders)
                 .totalCustomers(totalCustomers)
                 .totalProducts(totalProducts)
+                .activeProducts(activeProducts)
+                .premiumProducts(premiumProducts)
+                .ordersToday(ordersToday)
                 .pendingOrders(pendingOrders)
                 .deliveredOrders(deliveredOrders)
                 .cancelledOrders(cancelledOrders)
+                .newCustomers(newCustomers)
                 .lowStockProducts(lowStockProducts)
+                .outOfStockProducts(outOfStockProducts)
+                .pendingApprovalProducts(pendingApprovalProducts)
+                .trashProductsCount(trashProductsCount)
+                .lowReviewProductsCount(lowReviewProductsCount)
+                .mostOrderedProduct(mostOrderedProduct)
+                .leastOrderedProduct(leastOrderedProduct)
+                .topCategory(topCategory)
+                .dailyOrdersChart(dailyOrdersChart)
+                .monthlyOrdersChart(monthlyOrdersChart)
+                .categoryDistributionChart(categoryDistributionChart)
+                .productSalesChart(productSalesChart)
+                .customerGrowthChart(customerGrowthChart)
+                .revenueTrendChart(revenueTrendChart)
                 .topSellingProducts(topSellingProducts)
                 .recentOrders(recentOrders)
                 .build();

@@ -7,7 +7,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import api from '../../services/axios';
 import type { ApiResponse, User } from '../../types';
-import { MapPin, CreditCard, ChevronRight, Loader2 } from 'lucide-react';
+import { MapPin, CreditCard, ChevronRight, Loader2, Truck } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const checkoutSchema = z.object({
@@ -73,6 +73,8 @@ export const Checkout: React.FC = () => {
     }
   }, [user, setValue]);
 
+  const [deliveryMethod, setDeliveryMethod] = useState<'STANDARD' | 'EXPRESS'>('STANDARD');
+
   const onSubmit = async (data: CheckoutFormValues) => {
     if (!cart || cart.items.length === 0) {
       toast.error('Your cart is empty');
@@ -97,6 +99,8 @@ export const Checkout: React.FC = () => {
       // 2. Place order (moves cart to order table and deducts stock)
       const orderResponse = await api.post<ApiResponse<OrderResponseData>>('/orders/place', {
         customerId: user?.id,
+        deliveryMethod,
+        shippingAddress: `${data.address}, ${data.city}, ${data.state} - ${data.pincode}, ${data.country}`
       });
 
       const { id: orderId, totalAmount } = orderResponse.data.data;
@@ -144,9 +148,9 @@ export const Checkout: React.FC = () => {
   };
 
   const subtotal = cart?.totalPrice || 0;
-  const shipping = subtotal > 2000 || subtotal === 0 ? 0 : 100;
+  const shippingCharge = deliveryMethod === 'EXPRESS' ? 99 : (subtotal > 999 ? 0 : 49);
   const tax = parseFloat((subtotal * 0.18).toFixed(2));
-  const grandTotal = subtotal + shipping + tax;
+  const grandTotal = subtotal + shippingCharge + tax;
 
   return (
     <div className="space-y-8 pb-12">
@@ -259,6 +263,50 @@ export const Checkout: React.FC = () => {
             </div>
           </div>
 
+          {/* Delivery Method Selector */}
+          <div className="bg-white border border-slate-100 p-6 rounded-2xl shadow-xs space-y-4">
+            <h3 className="font-bold text-slate-800 text-base border-b border-slate-100 pb-3 flex items-center gap-2">
+              <Truck size={18} className="text-blue-600" />
+              <span>Select Delivery Option</span>
+            </h3>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <button
+                type="button"
+                onClick={() => setDeliveryMethod('STANDARD')}
+                className={`p-4 rounded-xl border flex flex-col justify-start text-left cursor-pointer transition-all ${
+                  deliveryMethod === 'STANDARD'
+                    ? 'bg-blue-50/40 border-blue-500 shadow-sm'
+                    : 'bg-white border-slate-200 hover:bg-slate-50'
+                }`}
+              >
+                <span className="font-bold text-slate-700 text-sm leading-none mb-1.5 flex items-center justify-between w-full">
+                  <span>Standard Delivery</span>
+                  <span className="text-[10px] text-teal-600 font-bold uppercase">
+                    {subtotal > 999 ? 'FREE' : '₹49'}
+                  </span>
+                </span>
+                <span className="text-[11px] text-slate-400 mt-1">Arrives in 4 days. Free above ₹999.</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setDeliveryMethod('EXPRESS')}
+                className={`p-4 rounded-xl border flex flex-col justify-start text-left cursor-pointer transition-all ${
+                  deliveryMethod === 'EXPRESS'
+                    ? 'bg-blue-50/40 border-blue-500 shadow-sm'
+                    : 'bg-white border-slate-200 hover:bg-slate-50'
+                }`}
+              >
+                <span className="font-bold text-slate-700 text-sm leading-none mb-1.5 flex items-center justify-between w-full">
+                  <span>Express Delivery</span>
+                  <span className="text-[10px] text-blue-600 font-bold uppercase">₹99</span>
+                </span>
+                <span className="text-[11px] text-slate-400 mt-1">Arrives tomorrow! Get next-day delivery.</span>
+              </button>
+            </div>
+          </div>
+
           {/* Payment Method Selector */}
           <div className="bg-white border border-slate-100 p-6 rounded-2xl shadow-xs space-y-4">
             <h3 className="font-bold text-slate-800 text-base border-b border-slate-100 pb-3 flex items-center gap-2">
@@ -273,7 +321,8 @@ export const Checkout: React.FC = () => {
                 { id: 'NET_BANKING', label: 'Net Banking', desc: 'Select major national banks' },
                 { id: 'COD', label: 'Cash on Delivery (COD)', desc: 'Pay cash upon delivery' },
               ].map((m) => (
-                <label
+                <button
+                  type="button"
                   key={m.id}
                   onClick={() => setPaymentMethod(m.id as any)}
                   className={`p-4 rounded-xl border flex flex-col justify-start text-left cursor-pointer transition-all ${
@@ -284,7 +333,7 @@ export const Checkout: React.FC = () => {
                 >
                   <span className="font-bold text-slate-700 text-sm leading-none mb-1.5">{m.label}</span>
                   <span className="text-[11px] text-slate-400">{m.desc}</span>
-                </label>
+                </button>
               ))}
             </div>
           </div>
@@ -311,8 +360,8 @@ export const Checkout: React.FC = () => {
               <span className="font-bold text-slate-800">Rs. {subtotal.toLocaleString('en-IN')}</span>
             </div>
             <div className="flex justify-between">
-              <span>Shipping cost</span>
-              <span className="font-bold text-slate-800">{shipping === 0 ? 'FREE' : `Rs. ${shipping}`}</span>
+              <span>Shipping cost ({deliveryMethod})</span>
+              <span className="font-bold text-slate-800">{shippingCharge === 0 ? 'FREE' : `Rs. ${shippingCharge}`}</span>
             </div>
             <div className="flex justify-between">
               <span>GST (18% Flat)</span>

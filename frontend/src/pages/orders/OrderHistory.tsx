@@ -146,38 +146,85 @@ export const OrderHistory: React.FC = () => {
                   ))}
                 </div>
 
-                {/* Progress Node Timeline */}
+                {/* Tracking Details Card */}
                 {order.orderStatus !== 'CANCELLED' && (
-                  <div className="pt-6 border-t border-slate-50">
-                    <div className="flex justify-between max-w-lg mx-auto relative">
-                      {/* Line background */}
-                      <div className="absolute top-[13px] left-3 right-3 h-[2px] bg-slate-200 -z-10" />
+                  <div className="bg-slate-50/50 p-4.5 rounded-2xl border border-slate-150 space-y-3.5 text-xs text-slate-600 leading-normal">
+                    <span className="font-bold text-slate-700 uppercase text-[9px] tracking-wider block mb-1">
+                      📦 Delivery Tracking Details
+                    </span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                      <div>
+                        <span className="text-slate-400 font-semibold block text-[10px] uppercase">Courier Partner</span>
+                        <span className="font-bold text-slate-750">{order.courierPartner || 'ShopSphere Logistics'}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 font-semibold block text-[10px] uppercase">Tracking ID</span>
+                        <span className="font-mono font-bold text-slate-750">{order.trackingId || 'TRK-N/A'}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 font-semibold block text-[10px] uppercase">Expected Delivery</span>
+                        <span className="font-bold text-slate-750">
+                          {order.expectedDeliveryDate 
+                            ? new Date(order.expectedDeliveryDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+                            : 'Standard Delivery'}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 font-semibold block text-[10px] uppercase">Estimated Arrival Window</span>
+                        <span className="font-bold text-slate-750">{order.estimatedArrivalTime || '10:00 AM - 06:00 PM'}</span>
+                      </div>
+                    </div>
 
-                      {['PENDING', 'CONFIRMED', 'SHIPPED', 'DELIVERED'].map((nodeStatus, idx) => {
-                        const statusesOrder = ['PENDING', 'CONFIRMED', 'PACKED', 'SHIPPED', 'DELIVERED'];
-                        const currentIdx = statusesOrder.indexOf(order.orderStatus);
-                        const nodeIdx = statusesOrder.indexOf(nodeStatus);
-                        const isCompleted = currentIdx >= nodeIdx;
+                    {/* Progress Node Timeline */}
+                    <div className="pt-6 border-t border-slate-100/60 mt-3">
+                      <div className="flex justify-between max-w-2xl mx-auto relative">
+                        {/* Line background */}
+                        <div className="absolute top-[13px] left-3 right-3 h-[2px] bg-slate-200 -z-10" />
 
-                        return (
-                          <div key={nodeStatus} className="flex flex-col items-center gap-2">
-                            <div
-                              className={`w-7 h-7 rounded-full flex items-center justify-center border font-bold text-xs ${
-                                isCompleted
-                                  ? 'bg-blue-600 border-blue-600 text-white shadow-md'
-                                  : 'bg-white border-slate-250 text-slate-350 shadow-inner'
-                              }`}
-                            >
-                              {idx + 1}
+                        {[
+                          { label: 'Confirmed', key: 'CONFIRMED' },
+                          { label: 'Packed', key: 'PACKED' },
+                          { label: 'Dispatched', key: 'SHIPPED' },
+                          { label: 'Out for Delivery', key: 'OUT_FOR_DELIVERY' },
+                          { label: 'Delivered', key: 'DELIVERED' }
+                        ].map((node, idx) => {
+                          const statusOrder = ['PENDING', 'CONFIRMED', 'PACKED', 'SHIPPED', 'DELIVERED'];
+                          const currentStatus = order.orderStatus;
+                          
+                          let currentIdx = statusOrder.indexOf(currentStatus);
+                          if (currentStatus === 'PENDING') currentIdx = 0; // map pending to confirmed
+
+                          // Map node indices: Confirmed=0/1, Packed=2, Dispatched=3, Out_for_Delivery=3.5, Delivered=4
+                          let nodeIdx = idx;
+                          if (idx === 0) nodeIdx = 1; // Confirmed
+                          else if (idx === 1) nodeIdx = 2; // Packed
+                          else if (idx === 2) nodeIdx = 3; // Dispatched/Shipped
+                          else if (idx === 3) nodeIdx = 3.5; // Out for Delivery
+                          else if (idx === 4) nodeIdx = 4; // Delivered
+
+                          // Check if completed
+                          const isCompleted = currentIdx >= Math.floor(nodeIdx) || (currentStatus === 'DELIVERED');
+
+                          return (
+                            <div key={node.label} className="flex flex-col items-center gap-2">
+                              <div
+                                className={`w-7 h-7 rounded-full flex items-center justify-center border font-bold text-xs transition-all duration-300 ${
+                                  isCompleted
+                                    ? 'bg-blue-600 border-blue-600 text-white shadow-md'
+                                    : 'bg-white border-slate-250 text-slate-350 shadow-inner'
+                                }`}
+                              >
+                                {idx + 1}
+                              </div>
+                              <span className={`text-[9px] font-bold uppercase tracking-wider ${
+                                isCompleted ? 'text-blue-600' : 'text-slate-400'
+                              }`}>
+                                {node.label}
+                              </span>
                             </div>
-                            <span className={`text-[10px] font-bold uppercase tracking-wider ${
-                              isCompleted ? 'text-blue-600' : 'text-slate-400'
-                            }`}>
-                              {nodeStatus}
-                            </span>
-                          </div>
-                        );
-                      })}
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
                 )}

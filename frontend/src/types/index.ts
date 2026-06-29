@@ -24,6 +24,8 @@ export interface ProductImage {
   id: number;
   imageUrl: string;
   isPrimary: boolean;
+  sortOrder?: number;
+  primaryImage?: boolean;
 }
 
 export interface Inventory {
@@ -45,6 +47,11 @@ export interface Product {
   inventory: Inventory;
   averageRating?: number;
   reviewCount?: number;
+  premium?: boolean;
+  approved?: boolean;
+  deletedAt?: string;
+  sku?: string;
+  reviews?: Review[];
 }
 
 export interface CartItem {
@@ -99,6 +106,10 @@ export interface Order {
   orderItems: OrderItem[];
   paymentStatus?: string;
   paymentMethod?: string;
+  courierPartner?: string;
+  trackingId?: string;
+  expectedDeliveryDate?: string;
+  estimatedArrivalTime?: string;
 }
 
 export interface Payment {

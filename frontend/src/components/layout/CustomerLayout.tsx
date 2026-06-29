@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { ChatbotWidget } from '../common/ChatbotWidget';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
 import api from '../../services/axios';
@@ -504,6 +505,7 @@ export const CustomerLayout: React.FC = () => {
           <p>© {new Date().getFullYear()} ShopSphere Enterprise Inc. All rights reserved.</p>
         </div>
       </footer>
+      <ChatbotWidget />
     </div>
   );
 };

@@ -1,7 +1,9 @@
+D:\Projects and Hackathons\Shopsphere\src\main\java\com\shopsphere\config\DataInitializer.java
 D:\Projects and Hackathons\Shopsphere\src\main\java\com\shopsphere\config\SecurityConfig.java
 D:\Projects and Hackathons\Shopsphere\src\main\java\com\shopsphere\controller\AuthController.java
 D:\Projects and Hackathons\Shopsphere\src\main\java\com\shopsphere\controller\CartController.java
 D:\Projects and Hackathons\Shopsphere\src\main\java\com\shopsphere\controller\CategoryController.java
+D:\Projects and Hackathons\Shopsphere\src\main\java\com\shopsphere\controller\ChatbotController.java
 D:\Projects and Hackathons\Shopsphere\src\main\java\com\shopsphere\controller\CustomerController.java
 D:\Projects and Hackathons\Shopsphere\src\main\java\com\shopsphere\controller\DashboardController.java
 D:\Projects and Hackathons\Shopsphere\src\main\java\com\shopsphere\controller\InventoryController.java
@@ -17,11 +19,15 @@ D:\Projects and Hackathons\Shopsphere\src\main\java\com\shopsphere\controller\Wi
 D:\Projects and Hackathons\Shopsphere\src\main\java\com\shopsphere\dto\request\AdminRequest.java
 D:\Projects and Hackathons\Shopsphere\src\main\java\com\shopsphere\dto\request\CartRequest.java
 D:\Projects and Hackathons\Shopsphere\src\main\java\com\shopsphere\dto\request\CategoryRequest.java
+D:\Projects and Hackathons\Shopsphere\src\main\java\com\shopsphere\dto\request\ChatbotRequest.java
 D:\Projects and Hackathons\Shopsphere\src\main\java\com\shopsphere\dto\request\CustomerRequest.java
+D:\Projects and Hackathons\Shopsphere\src\main\java\com\shopsphere\dto\request\GoogleLoginRequest.java
+D:\Projects and Hackathons\Shopsphere\src\main\java\com\shopsphere\dto\request\ImageReorderRequest.java
 D:\Projects and Hackathons\Shopsphere\src\main\java\com\shopsphere\dto\request\InventoryRequest.java
 D:\Projects and Hackathons\Shopsphere\src\main\java\com\shopsphere\dto\request\LoginRequest.java
 D:\Projects and Hackathons\Shopsphere\src\main\java\com\shopsphere\dto\request\OrderRequest.java
 D:\Projects and Hackathons\Shopsphere\src\main\java\com\shopsphere\dto\request\PaymentRequest.java
+D:\Projects and Hackathons\Shopsphere\src\main\java\com\shopsphere\dto\request\ProductImageRequest.java
 D:\Projects and Hackathons\Shopsphere\src\main\java\com\shopsphere\dto\request\ProductRequest.java
 D:\Projects and Hackathons\Shopsphere\src\main\java\com\shopsphere\dto\request\RecentlyViewedRequest.java
 D:\Projects and Hackathons\Shopsphere\src\main\java\com\shopsphere\dto\request\ReviewRequest.java
@@ -32,6 +38,7 @@ D:\Projects and Hackathons\Shopsphere\src\main\java\com\shopsphere\dto\response\
 D:\Projects and Hackathons\Shopsphere\src\main\java\com\shopsphere\dto\response\CartItemResponse.java
 D:\Projects and Hackathons\Shopsphere\src\main\java\com\shopsphere\dto\response\CartResponse.java
 D:\Projects and Hackathons\Shopsphere\src\main\java\com\shopsphere\dto\response\CategoryResponse.java
+D:\Projects and Hackathons\Shopsphere\src\main\java\com\shopsphere\dto\response\ChatbotResponse.java
 D:\Projects and Hackathons\Shopsphere\src\main\java\com\shopsphere\dto\response\CustomerDashboardResponse.java
 D:\Projects and Hackathons\Shopsphere\src\main\java\com\shopsphere\dto\response\CustomerResponse.java
 D:\Projects and Hackathons\Shopsphere\src\main\java\com\shopsphere\dto\response\InventoryResponse.java
@@ -114,8 +121,10 @@ D:\Projects and Hackathons\Shopsphere\src\main\java\com\shopsphere\security\JwtT
 D:\Projects and Hackathons\Shopsphere\src\main\java\com\shopsphere\service\AdminService.java
 D:\Projects and Hackathons\Shopsphere\src\main\java\com\shopsphere\service\CartService.java
 D:\Projects and Hackathons\Shopsphere\src\main\java\com\shopsphere\service\CategoryService.java
+D:\Projects and Hackathons\Shopsphere\src\main\java\com\shopsphere\service\ChatbotService.java
 D:\Projects and Hackathons\Shopsphere\src\main\java\com\shopsphere\service\CustomerService.java
 D:\Projects and Hackathons\Shopsphere\src\main\java\com\shopsphere\service\DashboardService.java
+D:\Projects and Hackathons\Shopsphere\src\main\java\com\shopsphere\service\EmailService.java
 D:\Projects and Hackathons\Shopsphere\src\main\java\com\shopsphere\service\InventoryService.java
 D:\Projects and Hackathons\Shopsphere\src\main\java\com\shopsphere\service\InvoiceService.java
 D:\Projects and Hackathons\Shopsphere\src\main\java\com\shopsphere\service\NotificationService.java
@@ -129,8 +138,10 @@ D:\Projects and Hackathons\Shopsphere\src\main\java\com\shopsphere\service\Wishl
 D:\Projects and Hackathons\Shopsphere\src\main\java\com\shopsphere\serviceImpl\AdminServiceImpl.java
 D:\Projects and Hackathons\Shopsphere\src\main\java\com\shopsphere\serviceImpl\CartServiceImpl.java
 D:\Projects and Hackathons\Shopsphere\src\main\java\com\shopsphere\serviceImpl\CategoryServiceImpl.java
+D:\Projects and Hackathons\Shopsphere\src\main\java\com\shopsphere\serviceImpl\ChatbotServiceImpl.java
 D:\Projects and Hackathons\Shopsphere\src\main\java\com\shopsphere\serviceImpl\CustomerServiceImpl.java
 D:\Projects and Hackathons\Shopsphere\src\main\java\com\shopsphere\serviceImpl\DashboardServiceImpl.java
+D:\Projects and Hackathons\Shopsphere\src\main\java\com\shopsphere\serviceImpl\EmailServiceImpl.java
 D:\Projects and Hackathons\Shopsphere\src\main\java\com\shopsphere\serviceImpl\InventoryServiceImpl.java
 D:\Projects and Hackathons\Shopsphere\src\main\java\com\shopsphere\serviceImpl\InvoiceServiceImpl.java
 D:\Projects and Hackathons\Shopsphere\src\main\java\com\shopsphere\serviceImpl\NotificationServiceImpl.java
@@ -144,4 +155,5 @@ D:\Projects and Hackathons\Shopsphere\src\main\java\com\shopsphere\serviceImpl\W
 D:\Projects and Hackathons\Shopsphere\src\main\java\com\shopsphere\ShopsphereApplication.java
 D:\Projects and Hackathons\Shopsphere\src\main\java\com\shopsphere\util\ApiResponse.java
 D:\Projects and Hackathons\Shopsphere\src\main\java\com\shopsphere\util\AppConstants.java
+D:\Projects and Hackathons\Shopsphere\src\main\java\com\shopsphere\util\ProductCleanupScheduler.java
 D:\Projects and Hackathons\Shopsphere\src\main\java\com\shopsphere\util\ValidationUtil.java

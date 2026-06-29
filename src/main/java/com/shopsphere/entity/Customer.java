@@ -61,6 +61,12 @@ public class Customer extends BaseEntity {
     @Column(nullable = false)
     private Boolean enabled = true;
 
+    @Column(name = "google_id", unique = true)
+    private String googleId;
+
+    @Column(name = "profile_image")
+    private String profileImage;
+
     @Enumerated(EnumType.STRING)
     @Builder.Default
     @Column(nullable = false)

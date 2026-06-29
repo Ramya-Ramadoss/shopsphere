@@ -83,6 +83,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             Only {product.inventory.quantity} Left
           </span>
         )}
+        {product.premium && (
+          <span className="absolute top-3.5 left-3.5 bg-gradient-to-r from-violet-600 to-indigo-650 text-white text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase z-10 shadow-sm">
+            Premium
+          </span>
+        )}
 
         <img
           src={getProductImage()}
@@ -114,6 +119,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               {product.name}
             </h3>
           </Link>
+
+          {/* Arrival estimation tag */}
+          <div className="text-[9px] text-teal-650 font-bold bg-teal-50 px-2 py-0.5 rounded-md w-fit">
+            {product.premium ? "Express: Get it Tomorrow" : `Delivery by ${new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`}
+          </div>
         </div>
 
         {/* Pricing & Add to Cart */}

@@ -22,6 +22,10 @@ public class ProductImage extends BaseEntity {
     @Builder.Default
     private Boolean primaryImage = false;
 
+    @Builder.Default
+    @Column(name = "sort_order")
+    private Integer sortOrder = 0;
+
     @ManyToOne
     @JoinColumn(name = "product_id")
     private Product product;

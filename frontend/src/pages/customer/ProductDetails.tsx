@@ -42,6 +42,33 @@ export const ProductDetails: React.FC = () => {
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState<string>('');
   const [activeTab, setActiveTab] = useState<'desc' | 'specs' | 'reviews'>('desc');
+  const [zoomStyle, setZoomStyle] = useState<React.CSSProperties>({ transform: 'scale(1)' });
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - left) / width) * 100;
+    const y = ((e.clientY - top) / height) * 100;
+    setZoomStyle({
+      transformOrigin: `${x}% ${y}%`,
+      transform: 'scale(1.8)'
+    });
+  };
+
+  const handleMouseLeave = () => {
+    setZoomStyle({ transform: 'scale(1)' });
+  };
+
+  const getStandardArrivalDate = () => {
+    const standardDate = new Date();
+    standardDate.setDate(standardDate.getDate() + 4);
+    return standardDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+  };
+
+  const getExpressArrivalDate = () => {
+    const expressDate = new Date();
+    expressDate.setDate(expressDate.getDate() + 1);
+    return expressDate.toLocaleDateString('en-US', { weekday: 'long' });
+  };
 
   const productId = parseInt(id || '0', 10);
 
@@ -61,8 +88,10 @@ export const ProductDetails: React.FC = () => {
   useEffect(() => {
     if (product) {
       if (product.images && product.images.length > 0) {
-        const primary = product.images.find((img) => img.isPrimary);
-        setSelectedImage(primary ? primary.imageUrl : product.images[0].imageUrl);
+        // Sort by sortOrder and get first
+        const sorted = [...product.images].sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+        const primary = sorted.find((img) => img.primaryImage);
+        setSelectedImage(primary ? primary.imageUrl : sorted[0].imageUrl);
       } else {
         setSelectedImage('https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=600&auto=format&fit=crop');
       }
@@ -197,7 +226,8 @@ export const ProductDetails: React.FC = () => {
     );
   }
 
-  const imagesList = product.images && product.images.length > 0 ? product.images : [{ id: 0, imageUrl: selectedImage, isPrimary: true }];
+  const sortedImages = [...(product.images || [])].sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+  const imagesList = sortedImages.length > 0 ? sortedImages : [{ id: 0, imageUrl: selectedImage, primaryImage: true }];
 
   return (
     <div className="space-y-16 pb-12">
@@ -212,12 +242,20 @@ export const ProductDetails: React.FC = () => {
 
       {/* Product Summary Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
-        {/* Left: Image Gallery */}
+        {/* Left: Image Gallery with Hover Zoom */}
         <div className="space-y-4">
-          <div className="aspect-square w-full rounded-3xl border border-slate-100 bg-slate-50 overflow-hidden relative shadow-sm">
+          <div 
+            className="aspect-square w-full rounded-3xl border border-slate-100 bg-slate-50 overflow-hidden relative shadow-sm cursor-zoom-in"
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}
+          >
             <img
               src={selectedImage}
               alt={product.name}
+              style={{
+                transition: 'transform 0.1s ease-out',
+                ...zoomStyle
+              }}
               className="w-full h-full object-cover"
               onError={(e) => {
                 (e.target as HTMLImageElement).src =
@@ -249,7 +287,14 @@ export const ProductDetails: React.FC = () => {
         <div className="space-y-6 flex flex-col justify-start">
           <div className="space-y-2">
             <div className="flex justify-between items-start gap-4">
-              <span className="text-slate-400 font-semibold uppercase tracking-wider text-xs">{product.brand}</span>
+              <div className="flex items-center gap-2">
+                <span className="text-slate-400 font-semibold uppercase tracking-wider text-xs">{product.brand}</span>
+                {product.premium && (
+                  <span className="px-2.5 py-0.5 rounded-full bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-[9px] font-extrabold uppercase tracking-widest shadow-xs">
+                    ✨ Premium
+                  </span>
+                )}
+              </div>
               {product.inventory?.inStock && (
                 <div className="flex items-center gap-1 text-[10px] text-amber-500 font-bold bg-amber-50 px-2.5 py-0.5 rounded-full">
                   <Star size={11} className="fill-current" />
@@ -284,6 +329,29 @@ export const ProductDetails: React.FC = () => {
 
           {/* Short description */}
           <p className="text-slate-500 text-sm leading-relaxed">{product.description}</p>
+
+          {/* Dynamic delivery charges estimations */}
+          <div className="p-4 bg-blue-50/20 border border-blue-100 rounded-2xl space-y-2 text-xs text-slate-600 leading-normal">
+            <span className="font-bold text-slate-700 uppercase text-[9px] tracking-wider block mb-1">
+              🚚 Delivery & Arrival Forecast
+            </span>
+            <div className="flex justify-between items-center">
+              <span>Standard Delivery:</span>
+              <span className="font-semibold text-slate-800">Arriving by {getStandardArrivalDate()}</span>
+            </div>
+            <div className="text-[10px] text-slate-450 italic">
+              ₹49 standard shipping fee (FREE for orders above ₹999)
+            </div>
+            <div className="flex justify-between items-center border-t border-slate-100/60 pt-2 mt-1">
+              <span>Express Delivery Option:</span>
+              <span className="font-bold text-blue-650 flex items-center gap-1">
+                <span>Get it {getExpressArrivalDate()}</span>
+              </span>
+            </div>
+            <div className="text-[10px] text-slate-450 italic">
+              ₹99 flat fee (order before 6 PM for next-day dispatch)
+            </div>
+          </div>
 
           {/* Quantity selector & Action Buttons */}
           {product.inventory?.inStock && (

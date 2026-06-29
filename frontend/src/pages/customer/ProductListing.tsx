@@ -22,6 +22,7 @@ export const ProductListing: React.FC = () => {
   const [minPrice, setMinPrice] = useState<string>(searchParams.get('minPrice') || '');
   const [maxPrice, setMaxPrice] = useState<string>(searchParams.get('maxPrice') || '');
   const [availability, setAvailability] = useState<string>(searchParams.get('available') || '');
+  const [premiumOnly, setPremiumOnly] = useState<boolean>(searchParams.get('premium') === 'true');
   const [sortBy, setSortBy] = useState<string>(searchParams.get('sort') || 'id,asc');
   const [page, setPage] = useState<number>(parseInt(searchParams.get('page') || '0', 10));
   const pageSize = 12;
@@ -33,6 +34,7 @@ export const ProductListing: React.FC = () => {
     setMinPrice(searchParams.get('minPrice') || '');
     setMaxPrice(searchParams.get('maxPrice') || '');
     setAvailability(searchParams.get('available') || '');
+    setPremiumOnly(searchParams.get('premium') === 'true');
     setSortBy(searchParams.get('sort') || 'id,asc');
     setPage(parseInt(searchParams.get('page') || '0', 10));
   }, [searchParams]);
@@ -70,7 +72,7 @@ export const ProductListing: React.FC = () => {
   });
 
   const pageData = productsResponse?.data;
-  const products = pageData?.content || [];
+  const products = (pageData?.content || []).filter(p => !premiumOnly || p.premium);
   const totalPages = pageData?.totalPages || 0;
 
   const updateFilters = (newParams: Record<string, string | number>) => {
@@ -94,6 +96,7 @@ export const ProductListing: React.FC = () => {
     setMinPrice('');
     setMaxPrice('');
     setAvailability('');
+    setPremiumOnly(false);
     setSortBy('id,asc');
     setSearchParams({});
   };
@@ -209,6 +212,20 @@ export const ProductListing: React.FC = () => {
               <option value="true">In Stock</option>
               <option value="false">Out of Stock</option>
             </select>
+          </div>
+
+          {/* Premium Collection Switch */}
+          <div className="flex items-center gap-2 p-3 bg-slate-50 border border-slate-200 rounded-xl">
+            <input
+              type="checkbox"
+              id="premiumOnly"
+              checked={premiumOnly}
+              onChange={(e) => updateFilters({ premium: e.target.checked.toString() })}
+              className="w-4 h-4 text-blue-600 rounded focus:ring-blue-100 cursor-pointer"
+            />
+            <label htmlFor="premiumOnly" className="text-xs font-bold text-slate-650 uppercase tracking-wider cursor-pointer select-none">
+              Premium Items Only
+            </label>
           </div>
 
           {/* Sort By Dropdown */}

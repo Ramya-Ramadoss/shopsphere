@@ -36,6 +36,29 @@ public class Order extends BaseEntity {
     @Column(nullable = false, length = 30)
     private com.shopsphere.enums.OrderStatus orderStatus = com.shopsphere.enums.OrderStatus.PENDING;
 
+    @Builder.Default
+    @Column(name = "delivery_method", length = 30)
+    private String deliveryMethod = "STANDARD";
+
+    @Column(name = "shipping_address", length = 255)
+    private String shippingAddress;
+
+    @Builder.Default
+    @Column(name = "delivery_charge", precision = 10, scale = 2)
+    private BigDecimal deliveryCharge = BigDecimal.ZERO;
+
+    @Column(name = "tracking_id", length = 100)
+    private String trackingId;
+
+    @Column(name = "courier_partner", length = 100)
+    private String courierPartner;
+
+    @Column(name = "expected_delivery_date")
+    private LocalDateTime expectedDeliveryDate;
+
+    @Column(name = "estimated_arrival_time", length = 100)
+    private String estimatedArrivalTime;
+
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<OrderItem> orderItems = new ArrayList<>();

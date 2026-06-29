@@ -9,14 +9,17 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class LoginRequest {
+public class GoogleLoginRequest {
+
+    @NotBlank(message = "Google ID is required")
+    private String googleId;
 
     @NotBlank(message = "Email is required")
     @Email(message = "Enter a valid email address")
     private String email;
 
-    @NotBlank(message = "Password is required")
-    private String password;
+    @NotBlank(message = "Name is required")
+    private String name;
 
-    private String role;
+    private String profileImage;
 }

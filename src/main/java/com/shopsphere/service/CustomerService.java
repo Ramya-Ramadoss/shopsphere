@@ -16,4 +16,6 @@ public interface CustomerService {
     CustomerResponse updateCustomer(Long id, CustomerRequest request);
 
     void deleteCustomer(Long id);
+
+    com.shopsphere.dto.response.AuthResponse loginOrRegisterGoogle(com.shopsphere.dto.request.GoogleLoginRequest request);
 }

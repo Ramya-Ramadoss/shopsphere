@@ -38,6 +38,8 @@ public class CustomerMapper {
                 .pincode(customer.getPincode())
                 .country(customer.getCountry())
                 .enabled(customer.getEnabled())
+                .googleId(customer.getGoogleId())
+                .profileImage(customer.getProfileImage())
                 .role(customer.getRole())
                 .createdAt(customer.getCreatedAt())
                 .updatedAt(customer.getUpdatedAt())

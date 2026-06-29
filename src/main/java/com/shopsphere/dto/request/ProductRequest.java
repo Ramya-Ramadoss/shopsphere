@@ -39,4 +39,8 @@ public class ProductRequest {
     private Integer quantity;
 
     private String imageUrl;
+
+    private Boolean premium;
+
+    private Boolean approved;
 }

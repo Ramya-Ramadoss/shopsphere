@@ -23,6 +23,20 @@ public class OrderResponse {
 
     private String orderStatus;
 
+    private String deliveryMethod;
+
+    private String shippingAddress;
+
+    private BigDecimal deliveryCharge;
+
+    private String trackingId;
+
+    private String courierPartner;
+
+    private LocalDateTime expectedDeliveryDate;
+
+    private String estimatedArrivalTime;
+
     private List<OrderItemResponse> orderItems;
 
     private PaymentResponse payment;

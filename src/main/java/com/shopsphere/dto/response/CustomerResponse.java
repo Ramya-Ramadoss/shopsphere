@@ -32,6 +32,10 @@ public class CustomerResponse {
 
     private Boolean enabled;
 
+    private String googleId;
+
+    private String profileImage;
+
     private Role role;
 
     private LocalDateTime createdAt;
