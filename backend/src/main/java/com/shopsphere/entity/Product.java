@@ -45,6 +45,20 @@ public class Product extends BaseEntity {
     @Builder.Default
     private Boolean active = true;
 
+    @Builder.Default
+    private Boolean deleted = false;
+
+    private java.time.LocalDateTime deletedAt;
+
+    @Builder.Default
+    private Boolean approved = true;
+
+    @Builder.Default
+    private Boolean premium = false;
+
+    @Builder.Default
+    private Boolean reviewVerified = false;
+
     @ManyToOne
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;

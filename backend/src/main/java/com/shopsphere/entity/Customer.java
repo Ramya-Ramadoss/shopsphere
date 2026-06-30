@@ -33,7 +33,7 @@ public class Customer extends BaseEntity {
     private String email;
 
     @NotBlank
-    @Size(min = 8)
+    @Size(min = 6)
     @Column(nullable = false)
     private String password;
 
@@ -60,6 +60,12 @@ public class Customer extends BaseEntity {
     @Builder.Default
     @Column(nullable = false)
     private Boolean enabled = true;
+
+    @Column(name = "google_id", unique = true)
+    private String googleId;
+
+    @Column(name = "profile_image")
+    private String profileImage;
 
     @Enumerated(EnumType.STRING)
     @Builder.Default

@@ -181,15 +181,18 @@ public class ReportServiceImpl implements ReportService {
         List<Map<String, Object>> productList = new ArrayList<>();
 
         for (Object[] row : topSellingData) {
-            Product p = (Product) row[0];
+            Long productId = (Long) row[0];
             Long totalSold = (Long) row[1];
-            Map<String, Object> pMap = new LinkedHashMap<>();
-            pMap.put("productId", p.getId());
-            pMap.put("productName", p.getProductName());
-            pMap.put("brand", p.getBrand());
-            pMap.put("price", p.getPrice());
-            pMap.put("totalUnitsSold", totalSold);
-            productList.add(pMap);
+            Product p = productRepository.findById(productId).orElse(null);
+            if (p != null) {
+                Map<String, Object> pMap = new java.util.LinkedHashMap<>();
+                pMap.put("productId", p.getId());
+                pMap.put("productName", p.getProductName());
+                pMap.put("brand", p.getBrand());
+                pMap.put("price", p.getPrice());
+                pMap.put("totalUnitsSold", totalSold);
+                productList.add(pMap);
+            }
         }
 
         Map<String, Object> report = new LinkedHashMap<>();

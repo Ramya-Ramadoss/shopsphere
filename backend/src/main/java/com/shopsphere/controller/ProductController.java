@@ -50,10 +50,79 @@ public class ProductController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteProduct(
+            @PathVariable Long id,
+            @RequestParam String password) {
 
-        productService.deleteProduct(id);
+        productService.deleteProduct(id, password);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/restore")
+    public ResponseEntity<ProductResponse> restoreProduct(@PathVariable Long id) {
+        ProductResponse response = productService.restoreProduct(id);
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/{id}/permanent")
+    public ResponseEntity<Void> permanentDeleteProduct(@PathVariable Long id) {
+        productService.permanentDeleteProduct(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/admin/trash")
+    public ResponseEntity<List<ProductResponse>> getTrashProducts() {
+        List<ProductResponse> products = productService.getTrashProducts();
+        return ResponseEntity.ok(products);
+    }
+
+    @GetMapping("/admin/awaiting-verification")
+    public ResponseEntity<List<ProductResponse>> getProductsAwaitingReviewVerification() {
+        List<ProductResponse> products = productService.getProductsAwaitingReviewVerification();
+        return ResponseEntity.ok(products);
+    }
+
+    @PostMapping("/{id}/verify")
+    public ResponseEntity<ProductResponse> verifyProductReviews(@PathVariable Long id) {
+        ProductResponse response = productService.verifyProductReviews(id);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{id}/keep")
+    public ResponseEntity<ProductResponse> keepProductReviews(@PathVariable Long id) {
+        ProductResponse response = productService.verifyProductReviews(id);
+        return ResponseEntity.ok(response);
+    }
+
+    // Image Endpoints
+    @PostMapping("/{id}/images")
+    public ResponseEntity<com.shopsphere.dto.response.ProductImageResponse> addProductImage(
+            @PathVariable Long id,
+            @Valid @RequestBody com.shopsphere.dto.request.ProductImageRequest request) {
+        com.shopsphere.dto.response.ProductImageResponse response = productService.addProductImage(id, request);
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/{id}/images/{imageId}")
+    public ResponseEntity<Void> deleteProductImage(@PathVariable Long id, @PathVariable Long imageId) {
+        productService.deleteProductImage(id, imageId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{id}/images/{imageId}/primary")
+    public ResponseEntity<com.shopsphere.dto.response.ProductImageResponse> setProductCoverImage(
+            @PathVariable Long id,
+            @PathVariable Long imageId) {
+        com.shopsphere.dto.response.ProductImageResponse response = productService.setProductCoverImage(id, imageId);
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/{id}/images/reorder")
+    public ResponseEntity<List<com.shopsphere.dto.response.ProductImageResponse>> reorderProductImages(
+            @PathVariable Long id,
+            @RequestBody com.shopsphere.dto.request.ImageReorderRequest request) {
+        List<com.shopsphere.dto.response.ProductImageResponse> response = productService.reorderProductImages(id, request);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/search")

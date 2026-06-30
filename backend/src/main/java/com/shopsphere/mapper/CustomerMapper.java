@@ -38,6 +38,8 @@ public class CustomerMapper {
                 .pincode(customer.getPincode())
                 .country(customer.getCountry())
                 .enabled(customer.getEnabled())
+                .googleId(customer.getGoogleId())
+                .profileImage(customer.getProfileImage())
                 .role(customer.getRole())
                 .createdAt(customer.getCreatedAt())
                 .updatedAt(customer.getUpdatedAt())
@@ -48,7 +50,6 @@ public class CustomerMapper {
 
         customer.setFullName(request.getFullName());
         customer.setEmail(request.getEmail());
-        customer.setPassword(request.getPassword());
         customer.setPhone(request.getPhone());
         customer.setAddress(request.getAddress());
         customer.setCity(request.getCity());

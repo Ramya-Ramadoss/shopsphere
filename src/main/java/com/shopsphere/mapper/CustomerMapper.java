@@ -50,7 +50,6 @@ public class CustomerMapper {
 
         customer.setFullName(request.getFullName());
         customer.setEmail(request.getEmail());
-        customer.setPassword(request.getPassword());
         customer.setPhone(request.getPhone());
         customer.setAddress(request.getAddress());
         customer.setCity(request.getCity());

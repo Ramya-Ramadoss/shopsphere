@@ -8,6 +8,7 @@ import com.shopsphere.entity.Inventory;
 import com.shopsphere.entity.Product;
 import com.shopsphere.exception.DuplicateResourceException;
 import com.shopsphere.exception.ResourceNotFoundException;
+import com.shopsphere.exception.BadRequestException;
 import com.shopsphere.mapper.ProductMapper;
 import com.shopsphere.repository.AdminRepository;
 import com.shopsphere.repository.CategoryRepository;
@@ -31,6 +32,7 @@ public class ProductServiceImpl implements ProductService {
     private final InventoryRepository inventoryRepository;
     private final ProductMapper productMapper;
     private final ProductImageRepository productImageRepository;
+    private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
     @Override
     public ProductResponse createProduct(ProductRequest request) {
@@ -54,27 +56,30 @@ public class ProductServiceImpl implements ProductService {
 
         Product savedProduct = productRepository.save(product);
 
+        // Create initial inventory
+        Inventory inventory = Inventory.builder()
+                .product(savedProduct)
+                .quantity(request.getQuantity())
+                .inStock(request.getQuantity() > 0)
+                .build();
+        inventoryRepository.save(inventory);
+
+        // Create initial image
         if (request.getImageUrl() != null && !request.getImageUrl().isBlank()) {
-            ProductImage productImage = ProductImage.builder()
+            ProductImage image = ProductImage.builder()
                     .product(savedProduct)
                     .imageUrl(request.getImageUrl())
                     .altText(request.getProductName())
                     .primaryImage(true)
+                    .sortOrder(0)
                     .build();
-            productImageRepository.save(productImage);
-            savedProduct.getImages().add(productImage);
+            productImageRepository.save(image);
+            
+            if (savedProduct.getImages() == null) {
+                savedProduct.setImages(new java.util.ArrayList<>());
+            }
+            savedProduct.getImages().add(image);
         }
-
-        Inventory inventory = Inventory.builder()
-                .product(savedProduct)
-                .quantity(request.getQuantity())
-                .reservedQuantity(0)
-                .inStock(request.getQuantity() > 0)
-                .build();
-
-        inventoryRepository.save(inventory);
-
-        savedProduct.setInventory(inventory);
 
         return productMapper.toResponse(savedProduct);
     }
@@ -91,8 +96,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public List<ProductResponse> getAllProducts() {
-
-        return productRepository.findAll()
+        return productRepository.findByDeletedFalse()
                 .stream()
                 .map(productMapper::toResponse)
                 .toList();
@@ -100,14 +104,14 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public List<ProductResponse> getProductsByCategory(Long categoryId) {
-
-        return productRepository.findByCategoryId(categoryId)
+        return productRepository.findByCategoryIdAndDeletedFalse(categoryId)
                 .stream()
                 .map(productMapper::toResponse)
                 .toList();
     }
 
     @Override
+    @org.springframework.transaction.annotation.Transactional
     public ProductResponse updateProduct(Long id, ProductRequest request) {
 
         Product product = productRepository.findById(id)
@@ -130,6 +134,7 @@ public class ProductServiceImpl implements ProductService {
                         .imageUrl(request.getImageUrl())
                         .altText(request.getProductName())
                         .primaryImage(true)
+                        .sortOrder(0)
                         .build();
                 productImageRepository.save(newImage);
                 product.getImages().add(newImage);
@@ -140,18 +145,211 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public void deleteProduct(Long id) {
-
+    @org.springframework.transaction.annotation.Transactional
+    public void deleteProduct(Long id, String password) {
         Product product = productRepository.findById(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Product not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
+        org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        String email = auth.getName();
+        Admin admin = adminRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Admin not found"));
+
+        if (!passwordEncoder.matches(password, admin.getPassword())) {
+            throw new BadRequestException("Invalid admin password. Deletion cancelled.");
+        }
+
+        product.setDeleted(true);
+        product.setDeletedAt(java.time.LocalDateTime.now());
+        productRepository.save(product);
+    }
+
+    @Override
+    @org.springframework.transaction.annotation.Transactional
+    public ProductResponse restoreProduct(Long id) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+        if (product.getDeleted() != null && product.getDeleted()) {
+            product.setDeleted(false);
+            product.setDeletedAt(null);
+            productRepository.save(product);
+        }
+        return productMapper.toResponse(product);
+    }
+
+    @Override
+    @org.springframework.transaction.annotation.Transactional
+    public void permanentDeleteProduct(Long id) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
         productRepository.delete(product);
     }
 
     @Override
+    public List<ProductResponse> getTrashProducts() {
+        return productRepository.findByDeletedTrue().stream()
+                .map(productMapper::toResponse)
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    @Override
+    public List<ProductResponse> getProductsAwaitingReviewVerification() {
+        return productRepository.findProductsAwaitingReviewVerification().stream()
+                .map(productMapper::toResponse)
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    @Override
+    @org.springframework.transaction.annotation.Transactional
+    public ProductResponse verifyProductReviews(Long id) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+        product.setReviewVerified(true);
+        Product saved = productRepository.save(product);
+        return productMapper.toResponse(saved);
+    }
+
+    @Override
+    @org.springframework.transaction.annotation.Transactional
+    public com.shopsphere.dto.response.ProductImageResponse addProductImage(Long id, com.shopsphere.dto.request.ProductImageRequest request) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+        
+        if (request.getPrimaryImage() != null && request.getPrimaryImage()) {
+            if (product.getImages() != null) {
+                for (ProductImage img : product.getImages()) {
+                    if (img.getPrimaryImage()) {
+                        img.setPrimaryImage(false);
+                        productImageRepository.save(img);
+                    }
+                }
+            }
+        }
+
+        int nextSortOrder = 0;
+        if (product.getImages() != null && !product.getImages().isEmpty()) {
+            nextSortOrder = product.getImages().stream()
+                    .mapToInt(img -> img.getSortOrder() != null ? img.getSortOrder() : 0)
+                    .max().orElse(0) + 1;
+        }
+
+        ProductImage newImage = ProductImage.builder()
+                .product(product)
+                .imageUrl(request.getImageUrl())
+                .altText(request.getAltText() != null ? request.getAltText() : product.getProductName())
+                .primaryImage(request.getPrimaryImage() != null ? request.getPrimaryImage() : false)
+                .sortOrder(request.getSortOrder() != null ? request.getSortOrder() : nextSortOrder)
+                .build();
+
+        ProductImage saved = productImageRepository.save(newImage);
+        
+        if (product.getImages() == null) {
+            product.setImages(new java.util.ArrayList<>());
+        }
+        product.getImages().add(saved);
+        
+        return com.shopsphere.dto.response.ProductImageResponse.builder()
+                .id(saved.getId())
+                .imageUrl(saved.getImageUrl())
+                .altText(saved.getAltText())
+                .primaryImage(saved.getPrimaryImage())
+                .sortOrder(saved.getSortOrder())
+                .build();
+    }
+
+    @Override
+    @org.springframework.transaction.annotation.Transactional
+    public void deleteProductImage(Long id, Long imageId) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+        ProductImage image = productImageRepository.findById(imageId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product image not found"));
+        
+        if (!image.getProduct().getId().equals(product.getId())) {
+            throw new BadRequestException("Image does not belong to this product");
+        }
+
+        boolean wasPrimary = image.getPrimaryImage();
+        product.getImages().remove(image);
+        productImageRepository.delete(image);
+
+        if (wasPrimary && !product.getImages().isEmpty()) {
+            ProductImage nextPrimary = product.getImages().get(0);
+            nextPrimary.setPrimaryImage(true);
+            productImageRepository.save(nextPrimary);
+        }
+    }
+
+    @Override
+    @org.springframework.transaction.annotation.Transactional
+    public List<com.shopsphere.dto.response.ProductImageResponse> reorderProductImages(Long id, com.shopsphere.dto.request.ImageReorderRequest request) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+
+        List<Long> orderList = request.getImageIds();
+        if (orderList == null || orderList.isEmpty()) {
+            throw new BadRequestException("Image IDs list cannot be empty");
+        }
+
+        List<ProductImage> productImages = product.getImages();
+        for (int i = 0; i < orderList.size(); i++) {
+            Long imgId = orderList.get(i);
+            int finalI = i;
+            productImages.stream()
+                    .filter(img -> img.getId().equals(imgId))
+                    .findFirst()
+                    .ifPresent(img -> {
+                        img.setSortOrder(finalI);
+                        productImageRepository.save(img);
+                    });
+        }
+
+        return productImages.stream()
+                .sorted(java.util.Comparator.comparing(img -> img.getSortOrder() != null ? img.getSortOrder() : 0))
+                .map(img -> com.shopsphere.dto.response.ProductImageResponse.builder()
+                        .id(img.getId())
+                        .imageUrl(img.getImageUrl())
+                        .altText(img.getAltText())
+                        .primaryImage(img.getPrimaryImage())
+                        .sortOrder(img.getSortOrder())
+                        .build())
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    @Override
+    @org.springframework.transaction.annotation.Transactional
+    public com.shopsphere.dto.response.ProductImageResponse setProductCoverImage(Long id, Long imageId) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+        ProductImage targetImage = productImageRepository.findById(imageId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product image not found"));
+
+        if (!targetImage.getProduct().getId().equals(product.getId())) {
+            throw new BadRequestException("Image does not belong to this product");
+        }
+
+        if (product.getImages() != null) {
+            for (ProductImage img : product.getImages()) {
+                boolean isTarget = img.getId().equals(imageId);
+                if (img.getPrimaryImage() != isTarget) {
+                    img.setPrimaryImage(isTarget);
+                    productImageRepository.save(img);
+                }
+            }
+        }
+
+        return com.shopsphere.dto.response.ProductImageResponse.builder()
+                .id(targetImage.getId())
+                .imageUrl(targetImage.getImageUrl())
+                .altText(targetImage.getAltText())
+                .primaryImage(true)
+                .sortOrder(targetImage.getSortOrder())
+                .build();
+    }
+
+    @Override
     public List<ProductResponse> searchProducts(String name) {
-        return productRepository.findByProductNameContainingIgnoreCase(name)
+        return productRepository.findByProductNameContainingIgnoreCaseAndDeletedFalse(name)
                 .stream()
                 .map(productMapper::toResponse)
                 .toList();
@@ -168,6 +366,9 @@ public class ProductServiceImpl implements ProductService {
             org.springframework.data.domain.Pageable pageable
     ) {
         org.springframework.data.jpa.domain.Specification<Product> spec = (root, query, cb) -> cb.conjunction();
+
+        // Hide soft deleted products
+        spec = spec.and((root, query, cb) -> cb.equal(root.get("deleted"), false));
 
         if (name != null && !name.trim().isEmpty()) {
             spec = spec.and((root, query, cb) -> cb.like(cb.lower(root.get("productName")), "%" + name.trim().toLowerCase() + "%"));

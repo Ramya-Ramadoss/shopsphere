@@ -17,7 +17,25 @@ public interface ProductService {
 
     ProductResponse updateProduct(Long id, ProductRequest request);
 
-    void deleteProduct(Long id);
+    void deleteProduct(Long id, String password);
+
+    ProductResponse restoreProduct(Long id);
+
+    void permanentDeleteProduct(Long id);
+
+    List<ProductResponse> getTrashProducts();
+
+    List<ProductResponse> getProductsAwaitingReviewVerification();
+
+    ProductResponse verifyProductReviews(Long id);
+
+    com.shopsphere.dto.response.ProductImageResponse addProductImage(Long id, com.shopsphere.dto.request.ProductImageRequest request);
+
+    void deleteProductImage(Long id, Long imageId);
+
+    List<com.shopsphere.dto.response.ProductImageResponse> reorderProductImages(Long id, com.shopsphere.dto.request.ImageReorderRequest request);
+
+    com.shopsphere.dto.response.ProductImageResponse setProductCoverImage(Long id, Long imageId);
 
     List<ProductResponse> searchProducts(String name);
 

@@ -11,7 +11,7 @@ import { KeyRound, Mail, Eye, EyeOff, Loader2, ArrowRight, ShieldCheck, User as 
 import { motion, AnimatePresence } from 'framer-motion';
 
 const loginSchema = z.object({
-  email: z.string().min(1, 'Email is required').email('Invalid email address'),
+  email: z.string().min(1, 'Email or Login ID is required'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 
@@ -218,7 +218,7 @@ export const Login: React.FC = () => {
             {/* Email Address */}
             <div className="flex flex-col gap-1.5">
               <label htmlFor="email" className="text-xs font-semibold text-slate-650 uppercase tracking-wider">
-                Email Address
+                Email / Login ID
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
@@ -226,8 +226,8 @@ export const Login: React.FC = () => {
                 </div>
                 <input
                   id="email"
-                  type="email"
-                  placeholder="name@example.com"
+                  type="text"
+                  placeholder="name@example.com or login ID"
                   className={`w-full bg-slate-50 border text-slate-800 pl-10 pr-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:bg-white transition-all ${
                     errors.email
                       ? 'border-rose-400 focus:ring-rose-200'

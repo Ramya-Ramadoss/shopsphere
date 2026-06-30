@@ -28,6 +28,7 @@ public class PaymentServiceImpl implements PaymentService {
     private final OrderRepository orderRepository;
     private final PaymentMapper paymentMapper;
     private final NotificationService notificationService;
+    private final com.shopsphere.service.EmailService emailService;
 
     @Override
     @Transactional
@@ -98,6 +99,15 @@ public class PaymentServiceImpl implements PaymentService {
         } else {
             notificationService.createNotification(customerId, "Order Placed", 
                     "Your order #" + order.getId() + " is placed successfully with Cash on Delivery option.");
+        }
+
+        // Send order confirmation email
+        if ("SUCCESS".equals(status) || "CASH_ON_DELIVERY".equals(payment.getPaymentMethod())) {
+            try {
+                emailService.sendOrderConfirmationEmail(order);
+            } catch (Exception e) {
+                log.error("Failed to send order confirmation email", e);
+            }
         }
 
         return paymentMapper.toResponse(savedPayment);

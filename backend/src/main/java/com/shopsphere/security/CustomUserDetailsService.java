@@ -21,8 +21,21 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        String lookupEmail = username;
+        if (username != null) {
+            String trimmed = username.trim().toLowerCase();
+            if (trimmed.equals("ramya.adim") || 
+                trimmed.equals("ramya.admin") || 
+                trimmed.equals("ramya.adim@gmail.com") || 
+                trimmed.equals("ramya.admin@gmail.com") || 
+                trimmed.equals("ramya.adim@shopsphere.com") ||
+                trimmed.equals("ramya.admin@shopsphere.com")) {
+                lookupEmail = "ramya.admin@shopsphere.com";
+            }
+        }
+
         // First try to find in Admin table
-        Optional<Admin> adminOpt = adminRepository.findByEmail(username);
+        Optional<Admin> adminOpt = adminRepository.findByEmail(lookupEmail);
         if (adminOpt.isPresent()) {
             Admin admin = adminOpt.get();
             return new CustomUserDetails(
@@ -35,7 +48,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         }
 
         // If not found in Admin, try Customer table
-        Optional<Customer> customerOpt = customerRepository.findByEmail(username);
+        Optional<Customer> customerOpt = customerRepository.findByEmail(lookupEmail);
         if (customerOpt.isPresent()) {
             Customer customer = customerOpt.get();
             return new CustomUserDetails(

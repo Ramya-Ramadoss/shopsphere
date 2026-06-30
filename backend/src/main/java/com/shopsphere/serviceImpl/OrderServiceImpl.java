@@ -50,6 +50,23 @@ public class OrderServiceImpl implements OrderService {
         order.setOrderDate(LocalDateTime.now());
         order.setOrderStatus(OrderStatus.PENDING);
 
+        String shippingAddr = request.getShippingAddress();
+        if (shippingAddr == null || shippingAddr.trim().isEmpty()) {
+            if (customer.getAddress() != null && !customer.getAddress().trim().isEmpty()) {
+                shippingAddr = customer.getAddress() + ", " + customer.getCity() + ", " + customer.getState() + " - " + customer.getPincode() + ", " + customer.getCountry();
+            } else {
+                shippingAddr = "No address provided, default pickup at main hub";
+            }
+        }
+        order.setShippingAddress(shippingAddr);
+
+        String deliveryMethod = request.getDeliveryMethod();
+        if (deliveryMethod == null || deliveryMethod.trim().isEmpty()) {
+            deliveryMethod = "STANDARD";
+        }
+        deliveryMethod = deliveryMethod.trim().toUpperCase();
+        order.setDeliveryMethod(deliveryMethod);
+
         BigDecimal total = BigDecimal.ZERO;
         List<OrderItem> orderItems = new ArrayList<>();
 
@@ -88,6 +105,34 @@ public class OrderServiceImpl implements OrderService {
             orderItems.add(orderItem);
             total = total.add(subtotal);
         }
+
+        // Calculate delivery charge and tracking details
+        BigDecimal deliveryCharge = BigDecimal.ZERO;
+        LocalDateTime expectedDelivery = LocalDateTime.now();
+        String estimatedTime = "10:00 AM - 06:00 PM";
+        String courier = "ShopSphere Logistics";
+        
+        if (deliveryMethod.equalsIgnoreCase("EXPRESS")) {
+            deliveryCharge = new BigDecimal("99.00");
+            expectedDelivery = expectedDelivery.plusDays(1);
+            estimatedTime = "09:00 AM - 01:00 PM";
+            courier = "Blue Dart Express";
+        } else {
+            if (total.compareTo(new BigDecimal("999.00")) <= 0) {
+                deliveryCharge = new BigDecimal("49.00");
+            }
+            expectedDelivery = expectedDelivery.plusDays(4);
+            estimatedTime = "10:00 AM - 06:00 PM";
+            courier = "Delhivery";
+        }
+        
+        order.setDeliveryCharge(deliveryCharge);
+        order.setExpectedDeliveryDate(expectedDelivery);
+        order.setEstimatedArrivalTime(estimatedTime);
+        order.setCourierPartner(courier);
+        
+        String trackingId = "TRK-" + (10000000000L + (long)(new java.util.Random().nextDouble() * 90000000000L));
+        order.setTrackingId(trackingId);
 
         order.setOrderItems(orderItems);
         order.setTotalAmount(total);

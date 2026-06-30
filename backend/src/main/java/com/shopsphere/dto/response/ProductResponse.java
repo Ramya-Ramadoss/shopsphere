@@ -39,6 +39,18 @@ public class ProductResponse {
 
     private List<ProductImageResponse> images;
 
+    private Boolean deleted;
+
+    private LocalDateTime deletedAt;
+
+    private Boolean approved;
+
+    private Boolean premium;
+
+    private Boolean reviewVerified;
+
+    private Long daysUntilDeletion;
+
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;

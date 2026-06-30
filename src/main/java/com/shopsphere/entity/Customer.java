@@ -33,7 +33,7 @@ public class Customer extends BaseEntity {
     private String email;
 
     @NotBlank
-    @Size(min = 8)
+    @Size(min = 6)
     @Column(nullable = false)
     private String password;
 

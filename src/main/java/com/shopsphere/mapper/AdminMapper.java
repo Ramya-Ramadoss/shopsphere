@@ -35,6 +35,5 @@ public class AdminMapper {
 
         admin.setFullName(request.getFullName());
         admin.setEmail(request.getEmail());
-        admin.setPassword(request.getPassword());
     }
 }
