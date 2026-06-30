@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://capsule-render.vercel.app/api?type=waving&height=250&color=0:4T45E5,100:03B5D4&text=%20SHOPSPHERE&fontSize=55&fontColor=ffffff&animation=fadeIn&fontAlignY=40" />
+  <img src="https://capsule-render.vercel.app/api?type=waving&height=250&color=0:4R42E5,100:03A5D4&text=%20SHOPSPHERE&fontSize=55&fontColor=ffffff&animation=fadeIn&fontAlignY=40" />
 </p>
 
 ---
